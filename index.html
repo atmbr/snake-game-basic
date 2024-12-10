@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+          /* Reset básico */
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, verdana;
+        }
+        body{
+            background: #2b2b2b;
+            --height-footer:40px;
+        }
+        /* Área segura para o jogo */
+        .box__safe {
+            width: 100%;
+            height: calc(100vh - var(--height-footer));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* O mapa do jogo */
+        .map__game {
+            background: #ffffff;
+            margin: 10px;
+            width: var(--size-box);
+            height: var(--size-box);
+            border-radius: 10px;
+            position: relative;
+            --size-box: 600px;
+        }
+
+        /* Estilo da cobra */
+        #snake{
+            position: absolute;
+        }
+        #snake span {
+            width: 20px;
+            height: 20px;
+            background: #ff6347; /* Vermelho-tomate */
+            position: absolute;
+            border-radius: 5px;
+        }
+
+        /* Estilo da fruta */
+        #fruit {
+            width: 20px;
+            height: 20px;
+            background: #32cd32; /* Verde-limão */
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(50, 205, 50, 0.8);
+        }
+        .menu__game{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            background: rgb(0 0 0 / 70%);
+            gap: 20px;
+            z-index: 99;
+        }
+        .title__game{
+            font-size: 3rem;
+            color: white;
+            font-weight: bold;
+            width: max-content;
+        }
+        .btn__start{
+            background: rgb(0, 119, 255);
+            padding: 10px 20px;
+            font-size: .8rem;
+            cursor: pointer;
+            font-weight: bold;
+            width: max-content;
+            color: white;
+            box-shadow: none;
+            outline: none;
+            border: none;
+        }
+        .lastScore{
+            font-size: 1.2rem;
+            color: #ccc;
+        }
+        #score{
+            width: 100%;
+            display: none;
+            justify-content: start;
+            align-items: center;
+            margin: 10px;
+            font-size: 1.2rem;
+        }
+        footer{
+            display: grid;
+            justify-items: center;
+            align-items: center;
+            width: 100%;
+            height: var(--height-footer);
+            
+        }
+        footer a{
+            color: #ccc;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <section class="box__safe">
+        <div class="menu__game">
+            <h1 class="title__game">Jogo da Cobrinha.</h1>
+            <button class="btn__start">Começar Jogo</button>
+            <span class="lastScore"></span>
+        </div>
+        <div class="map__game">
+            <span id="snake" hidden>
+            </span>
+            <span id="fruit" hidden></span>
+            <span id="score" hidden>Score:</span>
+        </div>
+    </section>
+    <footer>
+        <a href="https://youtube.com/@atm">Feito por Atm :3</a>
+    </footer>
+    <script>    // Variáveis de controle
+const btnStart = document.querySelector('.btn__start');
+const map = document.querySelector('.map__game');
+const snake = document.querySelector('#snake');
+const fruit = document.querySelector('#fruit');
+const score = document.querySelector('#score');
+let body = [];
+let dir = null, lastDir = null, gameOn = false;
+const size = 20; // Tamanho de cada bloco
+let speed = 150;
+
+// Calcula centro do mapa
+const center = { 
+    x: Math.floor(map.offsetWidth / 2 / size) * size, 
+    y: Math.floor(map.offsetHeight / 2 / size) * size 
+};
+
+// Movimentos
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowUp' && lastDir !== 'down') dir = 'up';
+    if (e.key === 'ArrowDown' && lastDir !== 'up') dir = 'down';
+    if (e.key === 'ArrowLeft' && lastDir !== 'right') dir = 'left';
+    if (e.key === 'ArrowRight' && lastDir !== 'left') dir = 'right';
+});
+var scoreP = 0;
+// Adiciona segmento à cobra
+const addSeg = () => {
+    const seg = document.createElement('span');
+    seg.style.cssText = `width:${size}px;height:${size}px;position:absolute;left:-100px;top:-100px;background:green`;
+    snake.appendChild(seg);
+    body.push({ x: -size, y: -size });
+};
+
+// Movimenta a cobra
+const move = () => {
+    if (!gameOn) return;
+
+    // Atualiza posições do corpo (de trás para frente)
+    for (let i = body.length - 1; i > 0; i--) {
+        body[i] = { ...body[i - 1] }; // Cada segmento copia a posição do anterior
+    }
+
+    // Atualiza a posição da cabeça
+    const head = body[0];
+    if (dir === 'up') head.y -= size;
+    if (dir === 'down') head.y += size;
+    if (dir === 'left') head.x -= size;
+    if (dir === 'right') head.x += size;
+
+    // Atualiza visualmente os segmentos
+    const segments = [...snake.querySelectorAll('span')];
+    body.forEach((segment, index) => {
+        segments[index].style.left = `${segment.x}px`;
+        segments[index].style.top = `${segment.y}px`;
+    });
+
+    // Verifica colisão com as bordas
+    if (
+        head.x < 0 || 
+        head.y < 0 || 
+        head.x >= map.offsetWidth || 
+        head.y >= map.offsetHeight
+    ) {
+        console.log('Você atingiu a borda! Fim de jogo!');
+        return reset();
+    }
+
+    // Verifica colisão com o próprio corpo
+    for (let i = 1; i < body.length; i++) {
+        if (head.x === body[i].x && head.y === body[i].y) {
+            console.log('Você colidiu com o próprio corpo! Fim de jogo!');
+            return reset();
+        }
+    }
+
+    // Verifica colisão com a fruta
+    if (head.x === fruit.offsetLeft && head.y === fruit.offsetTop) {
+        console.log('Fruta coletada!');
+        addSeg(); // Adiciona um novo segmento ao corpo
+        fruit.style.left = `${rand(0, map.offsetWidth - size)}px`;
+        fruit.style.top = `${rand(0, map.offsetHeight - size)}px`;
+        speed = Math.max(50, speed - 10); // Aumenta a velocidade
+        scoreP++; // Incrementa e adiciona o novo placar
+         // Exibe o array atualizado
+        score.innerHTML = `Score: ${scoreP?scoreP:0}`;
+    }
+
+    // Atualiza a última direção
+    lastDir = dir;
+
+    // Continua o loop
+    setTimeout(move, speed);
+};
+
+
+
+// Gera posição aleatória
+const rand = (min, max) => Math.floor(Math.random() * (max / size)) * size;
+
+// Reseta o jogo
+const reset = () => {
+    gameOn = false;
+    dir = 'right'; // A cobra começa movendo-se para a direita
+    lastDir = null;
+    speed = 150;
+    body = [{ x: center.x, y: center.y }];
+    if (fruit.hasAttribute('hidden') && snake.hasAttribute('hidden')) {
+        snake.removeAttribute('hidden');
+        fruit.removeAttribute('hidden');
+        score.style.display = 'grid';
+    } else if (!fruit.hasAttribute('hidden') && !snake.hasAttribute('hidden')) {
+        snake.setAttribute('hidden', '');
+        fruit.setAttribute('hidden', '');
+        score.style.display = 'none';
+    }
+    snake.innerHTML = `<span style="width:${size}px;height:${size}px;background:green;position:absolute;left:${center.x}px;top:${center.y}px"></span>`;
+    fruit.style.left = `${rand(0, map.offsetWidth)}px`;
+    fruit.style.top = `${rand(0, map.offsetHeight)}px`;
+    document.querySelector('.menu__game').style.display = 'flex';
+    if(scoreP >= 0){
+        document.querySelector('.lastScore').innerHTML = `Seu Score foi: ${scoreP?scoreP:0}`
+    }
+};
+
+// Inicia o jogo
+btnStart.addEventListener('click', () => {
+    reset();
+    gameOn = true;
+    document.querySelector('.menu__game').style.display = 'none';
+    // addSeg();
+    move();
+});
+
+    </script>
+</body>
+</html>
