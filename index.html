@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
-          /* Reset básico */
+         /* Reset básico */
           * {
             box-sizing: border-box;
             margin: 0;
@@ -14,27 +14,26 @@
         }
         body{
             background: #2b2b2b;
-            --height-footer:40px;
         }
         /* Área segura para o jogo */
         .box__safe {
             width: 100%;
-            height: calc(100vh - var(--height-footer));
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
+          --size-box: 500px;
         }
 
         /* O mapa do jogo */
-        .map__game {
-            background: #ffffff;
-            margin: 10px;
+        .map__game { 
+            background: #ffffff ;
+            margin: 10px; 
             width: var(--size-box);
             height: var(--size-box);
             border-radius: 10px;
             position: relative;
-            --size-box: 600px;
         }
 
         /* Estilo da cobra */
@@ -99,18 +98,7 @@
             align-items: center;
             margin: 10px;
             font-size: 1.2rem;
-        }
-        footer{
-            display: grid;
-            justify-items: center;
-            align-items: center;
-            width: 100%;
-            height: var(--height-footer);
-            
-        }
-        footer a{
-            color: #ccc;
-            text-decoration: none;
+          z-index:10;
         }
     </style>
 </head>
@@ -128,9 +116,6 @@
             <span id="score" hidden>Score:</span>
         </div>
     </section>
-    <footer>
-        <a href="https://youtube.com/@atm">Feito por Atm :3</a>
-    </footer>
     <script>    // Variáveis de controle
 const btnStart = document.querySelector('.btn__start');
 const map = document.querySelector('.map__game');
@@ -245,6 +230,7 @@ const reset = () => {
         snake.setAttribute('hidden', '');
         fruit.setAttribute('hidden', '');
         score.style.display = 'none';
+        score.innerHTML = "Score:"
     }
     snake.innerHTML = `<span style="width:${size}px;height:${size}px;background:green;position:absolute;left:${center.x}px;top:${center.y}px"></span>`;
     fruit.style.left = `${rand(0, map.offsetWidth)}px`;
